@@ -1,0 +1,2 @@
+rootProject.name='HWAndroid 10.2'
+include ':app'
