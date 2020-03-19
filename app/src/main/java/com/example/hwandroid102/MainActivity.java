@@ -18,11 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity {
 
     private List<Map<String, String>> contentList;
     private SharedPreferences sharedPref;
-    private static String LARGE_TEXT = "large_text";
+    private final static String LARGE_TEXT = "large_text";
+    private final String TEXT = "text";
+    private final String SIZE = "length";
     private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
@@ -30,18 +32,21 @@ public class MainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initSharedPreferences();
+        sharedPref = getSharedPreferences("MyText", MODE_PRIVATE);
+
+        SharedPreferences.Editor myEditor = sharedPref.edit();
+        myEditor.putString(LARGE_TEXT, getString(R.string.large_text));
+        myEditor.apply();
 
         initList();
+
+        initToolbar();
 
         onRefresh();
 
     }
 
     private void initList() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-
-        setSupportActionBar(toolbar);
 
         ListView list = findViewById(R.id.list);
 
@@ -55,8 +60,7 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
 
-                contentList.get(position).remove("length");
-                contentList.get(position).remove("text");
+                contentList.remove(position);
 
                 listContentAdapter.notifyDataSetChanged();
             }
@@ -64,27 +68,33 @@ public class MainActivity extends AppCompatActivity  {
 
     }
 
+    private void initToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+
+        setSupportActionBar(toolbar);
+
+    }
+
     @NonNull
     private SimpleAdapter createAdapter(String[] stringsTxt) {
-        contentList = new ArrayList<>();
-        prepareAdapterContetn(stringsTxt);
+        contentList = new ArrayList<>(stringsTxt.length);
+        prepareAdapterContent(stringsTxt);
 
         return new SimpleAdapter(this, contentList,
                 R.layout.list_with_content,
-                new String[]{"text", "length"},
+                new String[]{TEXT, SIZE},
                 new int[]{R.id.firstText, R.id.secondText});
     }
 
     @NonNull
-    private List<Map<String, String>> prepareAdapterContetn(String[] stringsTxt) {
+    private void prepareAdapterContent(String[] stringsTxt) {
         Map<String, String> mapForList;
         for (String value : stringsTxt) {
             mapForList = new HashMap<>();
-            mapForList.put("text", value);
-            mapForList.put("length", Integer.toString(value.length()));
+            mapForList.put(TEXT, value);
+            mapForList.put(SIZE, Integer.toString(value.length()));
             contentList.add(mapForList);
         }
-        return contentList;
     }
 
     @NonNull
@@ -93,16 +103,7 @@ public class MainActivity extends AppCompatActivity  {
         return sharedPref.getString(LARGE_TEXT, "").split("\n\n");
     }
 
-
-
-    private void initSharedPreferences() {
-        sharedPref =getSharedPreferences("MyText", MODE_PRIVATE);
-        SharedPreferences.Editor myEditor = sharedPref.edit();
-        myEditor.putString(LARGE_TEXT, getString(R.string.large_text));
-        myEditor.apply();
-    }
-
-    public void onRefresh()  {
+    public void onRefresh() {
         swipeRefreshLayout = findViewById(R.id.swipe_refresh);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
